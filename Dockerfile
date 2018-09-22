@@ -9,8 +9,8 @@ RUN mkdir -p $$GOPATH/bin && \
     go get github.com/pilu/fresh
 
 # define work directory
-ADD . /go/src/go.d
-WORKDIR /go/src/go.d
+ADD . $$GOPATH/src/github.com/pipa/go.d
+WORKDIR $$GOPATH/src/github.com/pipa/go.d
 
 # serve the app
 CMD glide update && fresh -c runner.conf main.go
