@@ -1,16 +1,30 @@
-# Create image from the official Go image
-FROM golang:alpine
-RUN apk add --update tzdata \
-    bash wget curl git;
+FROM golang:1.11beta2-alpine3.8 AS build-env
 
-# Create binary directory, install glide and fresh
-RUN mkdir -p $$GOPATH/bin && \
-    curl https://glide.sh/get | sh && \
-    go get github.com/pilu/fresh
+# Allow Go to retrive the dependencies for the build step
+RUN apk add --no-cache git
 
-# define work directory
-ADD . $$GOPATH/src/github.com/pipa/go.d
-WORKDIR $$GOPATH/src/github.com/pipa/go.d
+# Secure against running as root
+RUN adduser -D -u 10000 gouser
+RUN mkdir /pipa/ && chown gouser /pipa/
+USER gouser
 
-# serve the app
-CMD glide update && fresh -c runner.conf main.go
+WORKDIR /pipa/
+ADD . /pipa/
+
+# Compile the binary, we don't want to run the cgo resolver
+RUN CGO_ENABLED=0 go build -o /pipa/ago .
+
+# final stage
+FROM alpine:3.8
+
+# Secure against running as root
+RUN adduser -D -u 10000 gouser
+USER gouser
+
+WORKDIR /
+COPY --from=build-env /pipa/certs/docker.localhost.* /
+COPY --from=build-env /pipa/ago /
+
+EXPOSE 8080
+
+CMD ["/ago"]
