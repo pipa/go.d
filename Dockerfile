@@ -1,30 +1,29 @@
-FROM golang:1.11beta2-alpine3.8 AS build-env
+# Create image from the official Go image¬
+FROM golang:alpine
+RUN apk add --update tzdata \
+    bash wget curl git;
+# create a working directory
+WORKDIR /go/src/app
+# install dep
+RUN go get github.com/golang/dep/cmd/dep
+# add Gopkg.toml and Gopkg.lock
+ADD Gopkg.toml Gopkg.toml
+ADD Gopkg.lock Gopkg.lock
+# install packages
+RUN dep ensure --vendor-only
+# add source code
+ADD . . 
+# build the source
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main main.go
+# strip and compress the binary
+RUN strip --strip-unneeded main
+RUN upx main
 
-# Allow Go to retrive the dependencies for the build step
-RUN apk add --no-cache git
-
-# Secure against running as root
-RUN adduser -D -u 10000 gouser
-RUN mkdir /pipa/ && chown gouser /pipa/
-USER gouser
-
-WORKDIR /pipa/
-ADD . /pipa/
-
-# Compile the binary, we don't want to run the cgo resolver
-RUN CGO_ENABLED=0 go build -o /pipa/ago .
-
-# final stage
-FROM alpine:3.8
-
-# Secure against running as root
-RUN adduser -D -u 10000 gouser
-USER gouser
-
-WORKDIR /
-COPY --from=build-env /pipa/certs/docker.localhost.* /
-COPY --from=build-env /pipa/ago /
-
-EXPOSE 8080
-
-CMD ["/ago"]
+# use scratch (base for a docker image)
+FROM scratch
+# set working directory
+WORKDIR /root
+# copy the binary from builder
+COPY --from=builder /go/src/app/main .
+# run the binary
+CMD ["./main"]

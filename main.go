@@ -20,14 +20,14 @@ func main() {
 
 	h := homepage.NewHandlers(logger)
 
-	mux := http.NewServerMux()
+	mux := http.NewServeMux()
 	h.SetupRoutes(mux)
 
 	srv := server.New(mux, AgoServiceAddr)
 
-	logger.Println("server starting")
+	logger.Println("Server starting...")
 	err := srv.ListenAndServeTLS(AgoCertFile, AgoKeyFile)
 	if err != nil {
-		logger.Fatalf("server failed to start: %v", err)
+		logger.Fatalf("Server failed to start: %v", err)
 	}
 }

@@ -7,6 +7,7 @@ import (
 )
 
 func New(mux *http.ServeMux, serverAddress string) *http.Server {
+
 	// See https://blog.cloudflare.com/exposing-go-on-the-internet/ for details
 	// about these settings
 	tlsConfig := &tls.Config{
@@ -29,6 +30,7 @@ func New(mux *http.ServeMux, serverAddress string) *http.Server {
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
 	}
+
 	srv := &http.Server{
 		Addr:         serverAddress,
 		ReadTimeout:  5 * time.Second,
@@ -37,5 +39,6 @@ func New(mux *http.ServeMux, serverAddress string) *http.Server {
 		TLSConfig:    tlsConfig,
 		Handler:      mux,
 	}
+
 	return srv
 }

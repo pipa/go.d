@@ -10,3 +10,13 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Dont add swaps
+*.swp
+
+# Dont add my backups
+*.bk*
+
+# Don't want to send the vendor folder
+vendor
+
